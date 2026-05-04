@@ -86,6 +86,26 @@ export default function Learn() {
                  handleUpdateTopic({ ...topic, grammarData: updatedData });
                }
             } : undefined}
+            onComplete={(pageIdx) => {
+              const topic = customTopics.find(t => t.id === viewingLesson.topicId || t.steps?.some((s: any) => s.topicId === viewingLesson.topicId));
+              if (topic) {
+                const newSteps = (topic.steps || []).map((s: any) => {
+                  if (s.topicId === viewingLesson.topicId && s.pageIdx === pageIdx) {
+                    return { ...s, status: 'completed' };
+                  }
+                  return s;
+                });
+                // Also unlock the next step if possible
+                const sortedSteps = [...newSteps].sort((a,b) => a.pageIdx - b.pageIdx);
+                const currentListIndex = sortedSteps.findIndex(s => s.topicId === viewingLesson.topicId && s.pageIdx === pageIdx);
+                if (currentListIndex >= 0 && currentListIndex + 1 < sortedSteps.length) {
+                  if (sortedSteps[currentListIndex + 1].status === 'locked') {
+                     sortedSteps[currentListIndex + 1].status = 'active';
+                  }
+                }
+                handleUpdateTopic({ ...topic, steps: sortedSteps });
+              }
+            }}
           />
         )}
       </AnimatePresence>

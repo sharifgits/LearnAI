@@ -55,7 +55,7 @@ export default function App() {
   }
     
   return (
-    <div className="bg-slate-950 text-slate-100 h-screen w-screen flex flex-col md:flex-row overflow-hidden font-sans">
+    <div className="bg-slate-950 text-slate-100 fixed inset-0 flex flex-col md:flex-row overflow-hidden font-sans">
       {/* Sidebar Navigation */}
       <aside className="hidden md:flex w-64 bg-slate-950 border-r border-slate-900 flex-col">
         <div className="p-6 border-b border-slate-900 flex items-center justify-between">
@@ -83,9 +83,9 @@ export default function App() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-0 h-full overflow-hidden relative">
         {/* Content */}
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
           {activeTab === 'learn' && <Learn />}
           {activeTab === 'vocab' && <Vocabulary />}
           {activeTab === 'creator' && <AiCreator initialText={extractedText} />}
@@ -95,7 +95,7 @@ export default function App() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden bg-slate-950 border-t border-slate-900 flex justify-around p-3">
+      <nav className="md:hidden bg-slate-950 border-t border-slate-900 flex justify-around p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0 z-50">
         <NavItemMobile active={activeTab === 'learn'} onClick={() => changeTab('learn')} icon="book" label="Learn" />
         <NavItemMobile active={activeTab === 'vocab'} onClick={() => changeTab('vocab')} icon="book-open" label="Vocabulary" />
         <NavItemMobile active={activeTab === 'creator'} onClick={() => changeTab('creator')} icon="cpu" label="AI Creator" />

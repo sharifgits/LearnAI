@@ -14,9 +14,10 @@ interface GrammarExplanationProps {
   onClose: () => void;
   onStartPractice: (topicId: number) => void;
   onUpdateContent?: (updatedData: any) => void;
+  onComplete?: (pageIdx: number) => void;
 }
 
-export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customData, onClose, onStartPractice, onUpdateContent }: GrammarExplanationProps) {
+export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customData, onClose, onStartPractice, onUpdateContent, onComplete }: GrammarExplanationProps) {
   const [data, setData] = useState<any>(isCustom && customData ? customData : (GRAMMAR_DATA[topicId] || {
     title: "Coming Soon",
     subtitle: "We are currently writing this lesson.",
@@ -437,6 +438,21 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                         </span>
                       </div>
                     )}
+
+                    {(!currentContent.practice || currentContent.practice.length === 0) && onComplete && (
+                      <div className="mt-6">
+                        <button 
+                          onClick={() => {
+                            onComplete(currentPage);
+                            onClose();
+                          }}
+                          className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex justify-center items-center gap-2"
+                        >
+                          <Check size={16} strokeWidth={3} />
+                          Mark Lesson Complete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="bg-white dark:bg-slate-900 border-2 border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 sm:p-6 shadow-sm overflow-hidden relative">
@@ -535,7 +551,11 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                              Reset
                            </button>
                            <button 
-                            onClick={() => setViewMode('lesson')}
+                            onClick={() => {
+                              if (onComplete) onComplete(currentPage);
+                              setViewMode('lesson');
+                              onClose();
+                            }}
                             className="flex-1 py-3 bg-emerald-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/20"
                            >
                              Continue

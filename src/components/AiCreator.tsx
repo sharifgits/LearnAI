@@ -376,7 +376,7 @@ Mary reads a book every week.
                   subtitle: "",
                   topicId: topicIdNum,
                   pageIdx: basePageIdx + sIdx,
-                  status: 'completed'
+                  status: 'active'
                 }));
                 
                 const newContent = (result.subtopics || []).map((sub: any) => ({
@@ -419,7 +419,7 @@ Mary reads a book every week.
                 subtitle: "",
                 topicId: baseTopicId + idx,
                 pageIdx: sIdx,
-                status: 'completed'
+                status: 'active'
               })),
               grammarData: {
                 title: result.title || "Untitled Topic",
@@ -481,7 +481,7 @@ Mary reads a book every week.
           subtitle: "",
           topicId: baseTopicId,
           pageIdx: sIdx,
-          status: 'completed'
+          status: 'active'
         })),
         grammarData: {
           title: preview.title || "Untitled Topic",
