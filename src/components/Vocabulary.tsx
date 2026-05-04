@@ -44,11 +44,18 @@ export default function Vocabulary() {
   const [isDownloading, setIsDownloading] = useState(false);
   const storyRef = useRef<HTMLDivElement>(null);
 
+  const [usedVocabWords, setUsedVocabWords] = useState<string[]>([]);
+  const [usedStoryWords, setUsedStoryWords] = useState<string[]>([]);
+
   useEffect(() => {
     const savedWordsData = JSON.parse(localStorage.getItem('savedWords') || '[]');
     setSavedWords(savedWordsData);
     const savedStoriesData = JSON.parse(localStorage.getItem('savedStories') || '[]');
     setSavedStories(savedStoriesData);
+    const storedVocabWords = JSON.parse(localStorage.getItem('usedVocabWords') || '[]');
+    setUsedVocabWords(storedVocabWords);
+    const storedStoryWords = JSON.parse(localStorage.getItem('usedStoryWords') || '[]');
+    setUsedStoryWords(storedStoryWords);
   }, []);
 
   const searchForWord = async (wordToSearch: string) => {
@@ -181,6 +188,7 @@ export default function Vocabulary() {
         const ai = new GoogleGenAI({ apiKey });
         
         const prompt = `Generate exactly 20 advanced IELTS vocabulary words. 
+        ${usedVocabWords.length > 0 ? `CRITICAL: Do NOT generate any of the following words as you have already provided them before: ${usedVocabWords.join(', ')}.\n` : ''}
         Each word must have a clear definition, its Bengali meaning, an example sentence in English, the exact Bengali translation of that example sentence, and a list of 3 to 5 English synonyms.
         Output MUST be in JSON format matching strictly to this schema.`;
 
@@ -218,6 +226,12 @@ export default function Vocabulary() {
 
         const generatedData = JSON.parse(response.text);
         setWords(generatedData);
+        
+        // Update history
+        const newWordStrings = generatedData.map((w: VocabWord) => w.word.toLowerCase());
+        const updatedHistory = Array.from(new Set([...usedVocabWords, ...newWordStrings]));
+        setUsedVocabWords(updatedHistory);
+        localStorage.setItem('usedVocabWords', JSON.stringify(updatedHistory));
     } catch (err: any) {
         console.error(err);
         setErrorStatus(err.message || 'Failed to generate vocabulary.');
@@ -240,6 +254,7 @@ export default function Vocabulary() {
         const ai = new GoogleGenAI({ apiKey });
         
         const prompt = `Generate a short Bengali story that incorporates 10 advanced English vocabulary words. 
+        ${usedStoryWords.length > 0 ? `CRITICAL: Do NOT use any of these English words as they were used in previous stories: ${usedStoryWords.join(', ')}.\n` : ''}
         The English words should be written in English inside parentheses like this: (Word).
         Also provide the list of these 10 words with their Bengali pronunciation and Bengali meaning.
         Output MUST be in JSON format matching strictly to this schema.`;
@@ -279,6 +294,12 @@ export default function Vocabulary() {
 
         const generatedData = JSON.parse(response.text);
         setStoryData(generatedData);
+        
+        // Update history
+        const newWordStrings = generatedData.words.map((w: StoryWord) => w.word.toLowerCase());
+        const updatedHistory = Array.from(new Set([...usedStoryWords, ...newWordStrings]));
+        setUsedStoryWords(updatedHistory);
+        localStorage.setItem('usedStoryWords', JSON.stringify(updatedHistory));
     } catch (err: any) {
         console.error(err);
         setErrorStatus(err.message || 'Failed to generate story.');
