@@ -362,7 +362,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                 </div>
               </div>
             </motion.div>
-          ) : (
+          ) : currentContent ? (
             <AnimatePresence mode="wait">
               <motion.div 
                 key={currentPage}
@@ -447,8 +447,29 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                       </div>
                     )}
 
+                    {/* Next/Prev Navigation */}
+                    <div className="mt-8 flex gap-3">
+                      {!isFirstPage && (
+                        <button
+                          onClick={() => setCurrentPage(p => p - 1)}
+                          className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-black rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 flex justify-center items-center gap-2 border-2 border-slate-200 dark:border-slate-700"
+                        >
+                          <ArrowLeft size={16} strokeWidth={3} /> Previous
+                        </button>
+                      )}
+                      
+                      {!isLastPage && (
+                        <button
+                          onClick={() => setCurrentPage(p => p + 1)}
+                          className="flex-1 py-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-black rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 flex justify-center items-center gap-2 border-2 border-indigo-200 dark:border-indigo-800"
+                        >
+                          Next <ArrowRight size={16} strokeWidth={3} />
+                        </button>
+                      )}
+                    </div>
+
                     {(!currentContent.practice || currentContent.practice.length === 0) && onComplete && (
-                      <div className="mt-6">
+                      <div className="mt-4">
                         <button 
                           onClick={() => {
                             onComplete(currentPage);
@@ -578,7 +599,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                 )}
               </motion.div>
             </AnimatePresence>
-          )}
+          ) : null}
         </div>
       </div>
 

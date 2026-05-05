@@ -351,36 +351,37 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
               const topicIdNum = topic.steps?.[0]?.topicId || baseTopicId;
 
               if (selectedSubTopicId) {
-                // Find the specific step to merge into
+                // Find the specific step to append to
                 const stepIndex = (topic.steps || []).findIndex((s: any) => s.id === selectedSubTopicId);
                 if (stepIndex >= 0) {
                   const targetStep = topic.steps[stepIndex];
-                  const pageIdx = targetStep.pageIdx;
-
+                  // Target insert position is immediately after current target step's page
+                  let targetPageIdx = targetStep.pageIdx + 1;
+                  
+                  // Create new content blocks
+                  const newContent = (result.subtopics || []).map((sub: any) => ({
+                    title: sub.title,
+                    category: sub.category,
+                    keyPoints: sub.keyPoints || [],
+                    text: sub.content.replace(/\*/g, ''),
+                    examples: sub.examples || [],
+                    practice: sub.practice || [],
+                    sourcePage: sub.sourcePage || ""
+                  }));
+                  
+                  // Insert the new pages right after targetPageIdx
                   if (topic.grammarData?.content) {
-                    // Ensure content array is large enough (should be)
-                    if (!topic.grammarData.content[pageIdx]) {
-                      topic.grammarData.content[pageIdx] = {
-                        title: targetStep.title,
-                        keyPoints: [],
-                        examples: [],
-                        text: ""
-                      };
-                    }
-
-                    // Merge ALL subtopics from this AI result chunk into the target category
-                    (result.subtopics || []).forEach((newContentFromAI: any) => {
-                      const existingContent = topic.grammarData.content[pageIdx];
-                      
-                      topic.grammarData.content[pageIdx] = {
-                        ...existingContent,
-                        keyPoints: [...(existingContent.keyPoints || []), ...(newContentFromAI.keyPoints || [])].slice(0, 20),
-                        examples: [...(existingContent.examples || []), ...(newContentFromAI.examples || [])].slice(0, 15),
-                        practice: [...(existingContent.practice || []), ...(newContentFromAI.practice || [])].slice(0, 20),
-                        text: (existingContent.text ? existingContent.text + "\n\n" : "") + newContentFromAI.content.replace(/\*/g, '')
-                      };
-                    });
+                    topic.grammarData.content.splice(targetPageIdx, 0, ...newContent);
                   }
+                  
+                  // Shift all subsequent steps' pageIdx by the number of inserted pages
+                  const numInserted = newContent.length;
+                  topic.steps = topic.steps.map((s: any, idx: number) => {
+                    if (idx > stepIndex) {
+                      return { ...s, pageIdx: s.pageIdx + numInserted };
+                    }
+                    return s;
+                  });
                 }
               } else {
                 // Append as new sub-topics
@@ -484,7 +485,86 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
       const savedTopics = (await localforage.getItem<any[]>('custom_topics')) || [];
       const baseTopicId = 1000 + savedTopics.length;
       
-      const customModule = {
+      let customModule;
+
+      if (appendToExisting && selectedTopicId) {
+        const topicIndex = savedTopics.findIndex((t: any) => t.id === selectedTopicId);
+        if (topicIndex >= 0) {
+          const topic = { ...savedTopics[topicIndex] };
+          
+          // Hydrate default roadmap modules if they don't have custom grammarData yet
+          if (!topic.grammarData) {
+            topic.grammarData = {
+              title: topic.title,
+              subtitle: "",
+              content: (topic.steps || []).map((s: any) => (GRAMMAR_DATA[s.topicId]?.content?.[s.pageIdx] || { title: s.title, text: "Lesson content coming soon.", keyPoints: [], examples: [] }))
+            };
+            topic.steps = (topic.steps || []).map((s: any, idx: number) => ({ ...s, pageIdx: idx }));
+          }
+
+          let basePageIdx = topic.steps?.length || 0;
+          const topicIdNum = topic.steps?.[0]?.topicId || baseTopicId;
+
+          const newContent = (preview.subtopics || []).map((sub: any) => ({
+            title: sub.title,
+            category: sub.category,
+            keyPoints: sub.keyPoints || [],
+            text: sub.content.replace(/\*/g, ''),
+            examples: sub.examples || [],
+            practice: sub.practice || [],
+            sourcePage: sub.sourcePage || ""
+          }));
+
+          if (selectedSubTopicId) {
+            // Find the specific step to append to
+            const stepIndex = (topic.steps || []).findIndex((s: any) => s.id === selectedSubTopicId);
+            if (stepIndex >= 0) {
+              const targetStep = topic.steps[stepIndex];
+              // Target insert position is immediately after current target step's page
+              let targetPageIdx = targetStep.pageIdx + 1;
+              
+              // Insert the new pages right after targetPageIdx
+              topic.grammarData.content.splice(targetPageIdx, 0, ...newContent);
+              
+              // Shift all subsequent steps' pageIdx by the number of inserted pages
+              const numInserted = newContent.length;
+              topic.steps = topic.steps.map((s: any, idx: number) => {
+                if (idx > stepIndex) {
+                  return { ...s, pageIdx: s.pageIdx + numInserted };
+                }
+                return s;
+              });
+            }
+          } else {
+            // Append as new sub-topics
+            const newSteps = (preview.subtopics || []).map((sub: any, sIdx: number) => ({
+              id: `custom-step-${Date.now()}-${sIdx}`,
+              title: sub.title,
+              subtitle: "",
+              topicId: topicIdNum,
+              pageIdx: basePageIdx + sIdx,
+              status: 'active'
+            }));
+
+            topic.steps = [...(topic.steps || []), ...newSteps];
+            topic.grammarData.content = [...(topic.grammarData.content || []), ...newContent];
+          }
+          
+          savedTopics[topicIndex] = topic;
+          await localforage.setItem('custom_topics', savedTopics);
+          setAvailableTopics([...savedTopics]);
+          
+          // Clear draft
+          await localforage.removeItem('creator_draft_text');
+          await localforage.removeItem('creator_draft_instruction');
+          onLessonCreated(topic);
+          onBack();
+          return;
+        }
+      }
+
+      // Default Save as New Topic
+      customModule = {
         id: `custom-${Date.now()}`,
         title: preview.title || "Untitled Topic",
         description: "",
