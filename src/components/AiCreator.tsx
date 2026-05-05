@@ -28,14 +28,14 @@ The dog chased its tail.
 Mary reads a book every week.
  (এখানে noun "book" verb "reads"-এর action receive করছে)`;
 
-const defaultCustomPrompt = `আমি যেসকল ইংরেজি lesson দিব ai creator কে এর থেকে একটি শব্দও বাদ দেওয়া যাবে না, লেসন তৈরি করার সময়। Example ও দিতে হবে। যেরকম অনুবাদ করবে, উদাহরণ স্বরুপঃ Direct Objects (সরাসরি কর্ম):
+const defaultCustomPrompt = `আমি যেসকল ইংরেজি lesson দিব ai creator কে এর থেকে একটি শব্দও বাদ দেওয়া যাবে না, লেসন তৈরি করার সময়। Example গুলোকে অবশ্যই JSON এর examples array তে দিবে যাতে UI থেকে স্বয়ংক্রিয়ভাবে ক্রমিক (১, ২) দিয়ে দেখানো যায়। যেরকম অনুবাদ করবে, উদাহরণ স্বরুপঃ Direct Objects (সরাসরি কর্ম):
 Direct object হলো যে noun বা pronoun, verb-এর action-টি সরাসরি receive করে।
-Example:
-The dog chased its tail.
- (এখানে noun "tail" verb "chased"-এর action receive করছে)
 
-Mary reads a book every week.
- (এখানে noun "book" verb "reads"-এর action receive করছে)
+Example sentence: The dog chased its tail.
+Bengali analysis: (এখানে noun "tail" verb "chased"-এর action receive করছে)
+
+Example sentence: Mary reads a book every week.
+Bengali analysis: (এখানে noun "book" verb "reads"-এর action receive করছে)
 
 সাথে সর্বনিম্ন ১০ practice ত থাকবেই।`;
 
@@ -279,9 +279,11 @@ Mary reads a book every week.
       if (result && result.subtopics && result.subtopics.length > 0) {
         // Merge all generated subtopics into one unified block for easier editing
         let allPractice: any[] = [];
+        let allExamples: any[] = [];
         const mergedContent = result.subtopics.map((s: any, i: number) => {
           // Collect practice
           if (s.practice) allPractice = [...allPractice, ...s.practice];
+          if (s.examples) allExamples = [...allExamples, ...s.examples];
           
           // Clean title and check if it already starts with a number
           const cleanedTitle = s.title?.replace(/^(English\s+)?Grammar\s+Lesson:\s*/i, '');
@@ -293,6 +295,7 @@ Mary reads a book every week.
         result.subtopics = [{
           title: (result.title || "Comprehensive Lesson").replace(/^(English\s+)?Grammar\s+Lesson:\s*/i, ''),
           content: mergedContent,
+          examples: allExamples,
           practice: allPractice
         }];
         result.title = (result.title || "Comprehensive Lesson").replace(/^(English\s+)?Grammar\s+Lesson:\s*/i, '');
@@ -833,13 +836,27 @@ Mary reads a book every week.
                            <div className="absolute top-0 left-0 w-full h-1.5 bg-emerald-500/20 group-hover:bg-emerald-500/40 transition-colors" />
                            
                            {(preview.subtopics || []).map((sub: any, idx: number) => (
-                             <textarea 
-                               key={idx}
-                               value={sub.content}
-                               onChange={(e) => handleSubTopicEdit(idx, 'content', e.target.value)}
-                               className="w-full min-h-[450px] text-[12px] font-medium text-[#7a86a1] bg-slate-50/10 dark:bg-slate-800/10 p-6 rounded-[2rem] focus:outline-none border-2 border-transparent focus:border-emerald-500 transition-all leading-loose shadow-inner [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                               placeholder="Combined Lesson Content..."
-                             />
+                             <div key={`sub-${idx}`} className="space-y-4">
+                               <textarea 
+                                 value={sub.content}
+                                 onChange={(e) => handleSubTopicEdit(idx, 'content', e.target.value)}
+                                 className="w-full min-h-[450px] text-[12px] font-medium text-[#7a86a1] bg-slate-50/10 dark:bg-slate-800/10 p-6 rounded-[2rem] focus:outline-none border-2 border-transparent focus:border-emerald-500 transition-all leading-loose shadow-inner [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                                 placeholder="Combined Lesson Content..."
+                               />
+                               {sub.examples && sub.examples.length > 0 && (
+                                 <div className="bg-[#131b2c] p-4 rounded-xl border border-emerald-500/20">
+                                   <h4 className="text-[10px] font-black tracking-widest text-[#7a86a1] uppercase mb-3">Auto-Generated Examples</h4>
+                                   <div className="space-y-2">
+                                     {sub.examples.map((ex: any, eIdx: number) => (
+                                       <div key={eIdx} className="text-xs bg-[#0e121b] p-3 rounded-lg border border-[#212b43]">
+                                          <p className="font-bold text-white"><span className="text-emerald-500 mr-2">{eIdx + 1}.</span>{ex.en || ex}</p>
+                                          {ex.bn && <p className="text-[#7a86a1] mt-1 pl-4">{ex.bn}</p>}
+                                       </div>
+                                     ))}
+                                   </div>
+                                 </div>
+                               )}
+                             </div>
                            ))}
                            <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 py-2 px-4 rounded-full w-fit mx-auto mt-4">
                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

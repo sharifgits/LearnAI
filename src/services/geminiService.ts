@@ -86,15 +86,8 @@ export async function generateGrammarLesson(
   1. STRICTLY FORBIDDEN: Do NOT include "English Grammar Lesson:" or "Grammar Lesson:" or any similar redundant prefix in titles.
   2. STRICT REQUIREMENT: Do NOT omit any word, sentence, or concept from the input text. You must include EVERYTHING from the provided text in the lesson.
   3. Use clear Bengali explanations for concepts.
-  4. Format examples with specific analysis in parentheses underneath. Use this EXACT style:
-     
-     Example: The dog chased its tail.
-     (এখানে noun "tail" verb "chased"-এর action receive করছে)
-
-     Example: Mary reads a book every week.
-     (এখানে noun "book" verb "reads"-এর action receive করছে)
-
-  5. Ensure every example sentence has a corresponding Bengali analysis in parentheses explaining the grammatical function.
+  4. EXAMPLES MUST BE PLACED IN THE \`examples\` JSON ARRAY. Do NOT put examples inside the \`content\` string. Each example in the array should be an object with \`en\` (the English sentence) and \`bn\` (the Bengali analysis in parentheses).
+  5. Format the \`bn\` analysis exactly like this: (এখানে noun "tail" verb "chased"-এর action receive করছে).
   6. Ensure a mix of theory and examples.
   7. Generate a MINIMUM of 10 practice questions for each subtopic to ensure thorough testing.
   8. Output must be a valid JSON matching the schema.`;
@@ -111,9 +104,19 @@ export async function generateGrammarLesson(
           properties: {
             title: { type: "string" },
             category: { type: "string" },
-            content: { type: "string", description: "Detailed explanation in Bengali and English" },
+            content: { type: "string", description: "Detailed explanation in Bengali and English (DO NOT put examples here)" },
             keyPoints: { type: "array", items: { type: "string" } },
-            examples: { type: "array", items: { type: "string" } },
+            examples: { 
+              type: "array", 
+              items: { 
+                type: "object", 
+                properties: { 
+                  en: { type: "string", description: "English example sentence" }, 
+                  bn: { type: "string", description: "Bengali analysis or translation" } 
+                },
+                required: ["en", "bn"]
+              } 
+            },
             sourcePage: { type: "string" },
             practice: {
               type: "array",

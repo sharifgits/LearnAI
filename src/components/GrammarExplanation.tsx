@@ -315,30 +315,34 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                     </button>
                   </label>
                   <div className="space-y-3">
-                    {editContent.examples.map((ex: any, i: number) => (
+                    {editContent.examples.map((ex: any, i: number) => {
+                      const enValue = typeof ex === 'string' ? ex : ex.en || '';
+                      const bnValue = typeof ex === 'string' ? '' : ex.bn || '';
+                      return (
                       <div key={i} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 relative group">
-                        <input 
-                          type="text"
-                          placeholder="English sentence"
-                          value={ex.en}
+                        <textarea 
+                          placeholder="Example sentence"
+                          value={enValue}
                           onChange={e => {
                             const newEx = [...editContent.examples];
-                            newEx[i] = { ...newEx[i], en: e.target.value };
+                            newEx[i] = typeof ex === 'string' ? e.target.value : { ...ex, en: e.target.value };
                             setEditContent({...editContent, examples: newEx});
                           }}
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-bold"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-bold min-h-[60px]"
                         />
-                        <input 
-                          type="text"
-                          placeholder="Bengali translation"
-                          value={ex.bn}
-                          onChange={e => {
-                            const newEx = [...editContent.examples];
-                            newEx[i] = { ...newEx[i], bn: e.target.value };
-                            setEditContent({...editContent, examples: newEx});
-                          }}
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-bold"
-                        />
+                        {typeof ex !== 'string' && (
+                          <input 
+                            type="text"
+                            placeholder="Bengali translation"
+                            value={bnValue}
+                            onChange={e => {
+                              const newEx = [...editContent.examples];
+                              newEx[i] = { ...ex, bn: e.target.value };
+                              setEditContent({...editContent, examples: newEx});
+                            }}
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-2 text-xs font-bold"
+                          />
+                        )}
                         <button 
                           onClick={() => {
                             const newEx = editContent.examples.filter((_: any, idx: number) => idx !== i);
@@ -349,7 +353,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                           <Trash2 size={12} />
                         </button>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
 
@@ -427,12 +431,21 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                       <div>
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Examples</h4>
                         <div className="space-y-2">
-                          {currentContent.examples.map((ex: any, eIdx: number) => (
-                            <div key={eIdx} className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 sm:p-4 border-2 border-slate-100 dark:border-slate-800/80">
-                              <p className="font-black text-slate-800 dark:text-slate-100 text-base mb-1 font-serif">{ex.en}</p>
-                              <p className="text-slate-600 dark:text-slate-400 text-sm font-bold leading-relaxed font-serif">{ex.bn}</p>
-                            </div>
-                          ))}
+                          {currentContent.examples.map((ex: any, eIdx: number) => {
+                            if (typeof ex === 'string') {
+                              return (
+                                <div key={eIdx} className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 sm:p-4 border-2 border-slate-100 dark:border-slate-800/80">
+                                  <p className="font-black text-slate-800 dark:text-slate-100 text-base mb-1 font-serif"><span className="text-purple-500 mr-2">{eIdx + 1}.</span>{ex}</p>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={eIdx} className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 sm:p-4 border-2 border-slate-100 dark:border-slate-800/80">
+                                <p className="font-black text-slate-800 dark:text-slate-100 text-base mb-1 font-serif"><span className="text-purple-500 mr-2">{eIdx + 1}.</span>{ex.en}</p>
+                                <p className="text-slate-600 dark:text-slate-400 text-sm font-bold leading-relaxed font-serif pl-5">{ex.bn}</p>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
