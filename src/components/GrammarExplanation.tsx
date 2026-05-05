@@ -135,11 +135,17 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
     }
   };
 
-  const handleOptionSelect = (option: string) => {
+  const handleOptionSelect = (option: string, oIdx: number) => {
     if (showExplanation) return;
     setSelectedOption(option);
     setShowExplanation(true);
-    if (option === currentContent.practice[currentPracticeIdx].answer) {
+    
+    const questionItem = currentContent.practice[currentPracticeIdx];
+    const isCorrect = questionItem.answer !== undefined
+      ? option === questionItem.answer
+      : oIdx === questionItem.correctAnswer;
+      
+    if (isCorrect) {
       setPracticeScore(s => s + 1);
     }
   };
@@ -481,13 +487,16 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
 
                         <div className="grid gap-3">
                           {currentContent.practice[currentPracticeIdx].options.map((option: string, oIdx: number) => {
-                            const isCorrect = option === currentContent.practice[currentPracticeIdx].answer;
+                            const questionItem = currentContent.practice[currentPracticeIdx];
+                            const isCorrect = questionItem.answer !== undefined 
+                                ? option === questionItem.answer 
+                                : oIdx === questionItem.correctAnswer;
                             const isSelected = selectedOption === option;
                             
                             return (
                               <button
                                 key={oIdx}
-                                onClick={() => handleOptionSelect(option)}
+                                onClick={() => handleOptionSelect(option, oIdx)}
                                 className={classNames(
                                   "w-full p-4 rounded-xl text-left text-sm font-bold transition-all relative overflow-hidden flex items-center gap-3 border-2 text-purple-700 dark:text-purple-300",
                                   !showExplanation 

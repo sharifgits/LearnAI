@@ -28,8 +28,19 @@ The dog chased its tail.
 Mary reads a book every week.
  (এখানে noun "book" verb "reads"-এর action receive করছে)`;
 
-  const [inputText, setInputText] = useState(initialText || defaultText);
-  const [customInstruction, setCustomInstruction] = useState("");
+const defaultCustomPrompt = `আমি যেসকল ইংরেজি lesson দিব ai creator কে এর থেকে একটি শব্দও বাদ দেওয়া যাবে না, লেসন তৈরি করার সময়। Example ও দিতে হবে। যেরকম অনুবাদ করবে, উদাহরণ স্বরুপঃ Direct Objects (সরাসরি কর্ম):
+Direct object হলো যে noun বা pronoun, verb-এর action-টি সরাসরি receive করে।
+Example:
+The dog chased its tail.
+ (এখানে noun "tail" verb "chased"-এর action receive করছে)
+
+Mary reads a book every week.
+ (এখানে noun "book" verb "reads"-এর action receive করছে)
+
+সাথে সর্বনিম্ন ১০ practice ত থাকবেই।`;
+
+  const [inputText, setInputText] = useState(initialText || /* user default text was basically this example */ defaultText);
+  const [customInstruction, setCustomInstruction] = useState(defaultCustomPrompt);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [totalChunks, setTotalChunks] = useState(0);
