@@ -84,8 +84,9 @@ export async function generateGrammarLesson(
   
   CRITICAL FORMATTING RULES:
   1. STRICTLY FORBIDDEN: Do NOT include "English Grammar Lesson:" or "Grammar Lesson:" or any similar redundant prefix in titles.
-  2. Use clear Bengali explanations for concepts.
-  3. Format examples with specific analysis in parentheses underneath. Use this EXACT style:
+  2. STRICT REQUIREMENT: Do NOT omit any word, sentence, or concept from the input text. You must include EVERYTHING from the provided text in the lesson.
+  3. Use clear Bengali explanations for concepts.
+  4. Format examples with specific analysis in parentheses underneath. Use this EXACT style:
      
      Example: The dog chased its tail.
      (এখানে noun "tail" verb "chased"-এর action receive করছে)
@@ -93,10 +94,10 @@ export async function generateGrammarLesson(
      Example: Mary reads a book every week.
      (এখানে noun "book" verb "reads"-এর action receive করছে)
 
-  4. Ensure every example sentence has a corresponding Bengali analysis in parentheses explaining the grammatical function.
-  5. Ensure a mix of theory and examples.
-  6. Generate a MINIMUM of 10 practice questions for each subtopic to ensure thorough testing.
-  7. Output must be a valid JSON matching the schema.`;
+  5. Ensure every example sentence has a corresponding Bengali analysis in parentheses explaining the grammatical function.
+  6. Ensure a mix of theory and examples.
+  7. Generate a MINIMUM of 10 practice questions for each subtopic to ensure thorough testing.
+  8. Output must be a valid JSON matching the schema.`;
   
   const expectedSchema = {
     type: "object",
