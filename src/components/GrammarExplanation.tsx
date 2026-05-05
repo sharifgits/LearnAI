@@ -69,7 +69,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
           // 1. Headings (Start with numbers like "1.", "6." or specific terms followed by colon)
           if (/^\d+\./.test(trimmed) || (trimmed.includes(':') && trimmed.length < 50 && !trimmed.includes('('))) {
             return (
-              <h4 key={index} className="text-sm sm:text-base font-black text-indigo-700 dark:text-indigo-400 mt-6 mb-3 flex items-center gap-2 uppercase tracking-wide">
+              <h4 key={index} className="text-sm sm:text-base font-semibold text-indigo-700 dark:text-indigo-400 mt-6 mb-3 flex items-center gap-2 uppercase tracking-wide">
                 <span className="w-1.5 h-4 bg-indigo-500 rounded-full" />
                 {trimmed}
               </h4>
@@ -80,7 +80,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
           if (trimmed.includes('(') && trimmed.includes(')') && (trimmed.includes('হলো') || trimmed.includes('যা'))) {
              return (
               <div key={index} className="bg-purple-50/50 dark:bg-purple-900/10 border-l-4 border-purple-400 p-3 rounded-r-xl my-3">
-                <p className="text-sm sm:text-[15px] font-bold text-purple-800 dark:text-purple-300 leading-relaxed font-serif">
+                <p className="text-sm sm:text-[15px] font-normal text-purple-800 dark:text-purple-300 leading-relaxed font-serif">
                   {trimmed}
                 </p>
               </div>
@@ -93,7 +93,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
           if (isMainlyEnglish && trimmed.length < 150) {
             return (
               <div key={index} className="pl-3 border-l-2 border-indigo-200 dark:border-indigo-800 my-2">
-                <p className="text-base font-black text-slate-800 dark:text-slate-100 leading-snug font-serif">
+                <p className="text-base font-normal text-slate-800 dark:text-slate-100 leading-snug font-serif">
                   {trimmed}
                 </p>
               </div>
@@ -102,7 +102,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
 
           // 4. Default Bengali explanation text
           return (
-            <p key={index} className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300 leading-[1.8] font-serif">
+            <p key={index} className="text-sm sm:text-base font-light text-slate-700 dark:text-slate-300 leading-[1.8] font-serif">
               {trimmed}
             </p>
           );
@@ -429,20 +429,20 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                     {/* Examples Section */}
                     {currentContent.examples && currentContent.examples.length > 0 && (
                       <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Examples</h4>
+                        <h4 className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Examples</h4>
                         <div className="space-y-2">
                           {currentContent.examples.map((ex: any, eIdx: number) => {
                             if (typeof ex === 'string') {
                               return (
                                 <div key={eIdx} className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 sm:p-4 border-2 border-slate-100 dark:border-slate-800/80">
-                                  <p className="font-black text-slate-800 dark:text-slate-100 text-base mb-1 font-serif"><span className="text-purple-500 mr-2">{eIdx + 1}.</span>{ex}</p>
+                                  <p className="font-normal text-slate-800 dark:text-slate-100 text-base mb-1 font-serif"><span className="text-purple-500 mr-2">{eIdx + 1}.</span>{ex}</p>
                                 </div>
                               );
                             }
                             return (
                               <div key={eIdx} className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 sm:p-4 border-2 border-slate-100 dark:border-slate-800/80">
-                                <p className="font-black text-slate-800 dark:text-slate-100 text-base mb-1 font-serif"><span className="text-purple-500 mr-2">{eIdx + 1}.</span>{ex.en}</p>
-                                <p className="text-slate-600 dark:text-slate-400 text-sm font-bold leading-relaxed font-serif pl-5">{ex.bn}</p>
+                                <p className="font-normal text-slate-800 dark:text-slate-100 text-base mb-1 font-serif"><span className="text-purple-500 mr-2">{eIdx + 1}.</span>{ex.en}</p>
+                                <p className="text-slate-600 dark:text-slate-400 text-sm font-light leading-relaxed font-serif pl-5">{ex.bn}</p>
                               </div>
                             );
                           })}
