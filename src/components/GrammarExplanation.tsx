@@ -76,18 +76,7 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
             );
           }
 
-          // 2. Examples with Bengali analysis (e.g. sentences with parentheses)
-          if (trimmed.includes('(') && trimmed.includes(')') && (trimmed.includes('হলো') || trimmed.includes('যা'))) {
-             return (
-              <div key={index} className="bg-purple-50/50 dark:bg-purple-900/10 border-l-4 border-purple-400 p-3 rounded-r-xl my-3">
-                <p className="text-sm sm:text-[15px] font-normal text-purple-800 dark:text-purple-300 leading-relaxed font-serif">
-                  {trimmed}
-                </p>
-              </div>
-             );
-          }
-
-          // 3. Regular sentences in English (often in examples) or general explanation
+          // 2. Regular sentences in English (often in examples) or general explanation
           const isMainlyEnglish = /^[A-Z]/.test(trimmed) && !/[\u0980-\u09FF]/.test(trimmed.split(' ')[0]);
           
           if (isMainlyEnglish && trimmed.length < 150) {
