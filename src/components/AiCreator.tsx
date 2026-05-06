@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, FileText, Loader2, CheckCircle2, ChevronLeft, Send, AlertCircle, BookOpen, Upload, Download, RefreshCw, Settings, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateGrammarLesson } from '../services/geminiService';
-import { GRAMMAR_DATA } from '../data/defaultTopics';
+import { GRAMMAR_DATA, defaultTopics } from '../data/defaultTopics';
 import { cn } from '../lib/utils';
 import localforage from 'localforage';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -94,10 +94,11 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
   useEffect(() => {
     const loadData = async () => {
       try {
-        const storedTopics = await localforage.getItem<any[]>('custom_topics') || [];
-        setAvailableTopics(storedTopics);
+        const storedTopics = await localforage.getItem<any[]>('custom_topics');
+        setAvailableTopics(storedTopics && storedTopics.length > 0 ? storedTopics : defaultTopics);
       } catch (err) {
         console.error("Failed to load data from storage", err);
+        setAvailableTopics(defaultTopics);
       }
     };
     loadData();
@@ -485,7 +486,10 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
     if (preview) {
       setIsSaving(true);
       try {
-        const savedTopics = (await localforage.getItem<any[]>('custom_topics')) || [];
+        let savedTopics = await localforage.getItem<any[]>('custom_topics');
+        if (!savedTopics || savedTopics.length === 0) {
+          savedTopics = defaultTopics;
+        }
         const baseTopicId = 1000 + savedTopics.length;
         
         let customModule;

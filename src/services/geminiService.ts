@@ -31,7 +31,13 @@ export async function callGemini(
   retries: number = 3,
   retryDelay: number = 2000
 ) {
-  const finalApiKey = apiKey || process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || "";
+  let envKey = "";
+  if (typeof process !== "undefined" && process.env) {
+    envKey = process.env.GEMINI_API_KEY || "";
+  } else if (typeof import.meta !== "undefined" && (import.meta as any).env) {
+    envKey = (import.meta as any).env.VITE_GEMINI_API_KEY || "";
+  }
+  const finalApiKey = apiKey || envKey || localStorage.getItem('gemini_api_key') || "";
   
   if (!finalApiKey) {
     throw new Error("Gemini API key is required. Please set it in Settings.");

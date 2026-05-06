@@ -16,9 +16,9 @@ export default function Learn() {
   useEffect(() => {
     const loadTopics = async () => {
       try {
-        const saved = await localforage.getItem('custom_topics');
-        if (saved) {
-          setCustomTopics(saved as any[]);
+        const saved = await localforage.getItem('custom_topics') as any[];
+        if (saved && saved.length > 0) {
+          setCustomTopics(saved);
         } else {
           setCustomTopics(defaultTopics);
         }
