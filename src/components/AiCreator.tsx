@@ -95,10 +95,10 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
     const loadData = async () => {
       try {
         const storedTopics = await localforage.getItem<any[]>('custom_topics');
-        setAvailableTopics(storedTopics && storedTopics.length > 0 ? storedTopics : defaultTopics);
+        setAvailableTopics(storedTopics && storedTopics.length > 0 ? storedTopics : JSON.parse(JSON.stringify(defaultTopics)));
       } catch (err) {
         console.error("Failed to load data from storage", err);
-        setAvailableTopics(defaultTopics);
+        setAvailableTopics(JSON.parse(JSON.stringify(defaultTopics)));
       }
     };
     loadData();
@@ -324,7 +324,10 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
       setTotalChunks(chunks.length);
       
       const newTopics = [];
-      let savedTopics = (await localforage.getItem<any[]>('custom_topics')) || [];
+      let savedTopics = await localforage.getItem<any[]>('custom_topics');
+      if (!savedTopics || savedTopics.length === 0) {
+        savedTopics = JSON.parse(JSON.stringify(defaultTopics));
+      }
       const baseTopicId = 1000 + savedTopics.length; 
       const customKey = localStorage.getItem('GEMINI_API_KEY');
       
@@ -343,7 +346,11 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
                 topic.grammarData = {
                   title: topic.title,
                   subtitle: "",
-                  content: (topic.steps || []).map((s: any) => (GRAMMAR_DATA[s.topicId]?.content?.[s.pageIdx] || { title: s.title, text: "Lesson content coming soon.", keyPoints: [], examples: [] }))
+                  content: (topic.steps || []).map((s: any) => {
+                    const fallback = { title: s.title, text: "Lesson content coming soon.", keyPoints: [], examples: [] };
+                    const sourceContent = GRAMMAR_DATA[s.topicId]?.content?.[s.pageIdx];
+                    return sourceContent ? JSON.parse(JSON.stringify(sourceContent)) : fallback;
+                  })
                 };
                 // Normalize pageIdx to absolute array position in custom content
                 topic.steps = (topic.steps || []).map((s: any, idx: number) => ({ ...s, pageIdx: idx }));
@@ -488,7 +495,7 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
       try {
         let savedTopics = await localforage.getItem<any[]>('custom_topics');
         if (!savedTopics || savedTopics.length === 0) {
-          savedTopics = defaultTopics;
+          savedTopics = JSON.parse(JSON.stringify(defaultTopics));
         }
         const baseTopicId = 1000 + savedTopics.length;
         
@@ -504,7 +511,11 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
               topic.grammarData = {
                 title: topic.title,
                 subtitle: "",
-                content: (topic.steps || []).map((s: any) => (GRAMMAR_DATA[s.topicId]?.content?.[s.pageIdx] || { title: s.title, text: "Lesson content coming soon.", keyPoints: [], examples: [] }))
+                content: (topic.steps || []).map((s: any) => {
+                  const fallback = { title: s.title, text: "Lesson content coming soon.", keyPoints: [], examples: [] };
+                  const sourceContent = GRAMMAR_DATA[s.topicId]?.content?.[s.pageIdx];
+                  return sourceContent ? JSON.parse(JSON.stringify(sourceContent)) : fallback;
+                })
               };
               topic.steps = (topic.steps || []).map((s: any, idx: number) => ({ ...s, pageIdx: idx }));
             }

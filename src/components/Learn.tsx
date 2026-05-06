@@ -20,11 +20,11 @@ export default function Learn() {
         if (saved && saved.length > 0) {
           setCustomTopics(saved);
         } else {
-          setCustomTopics(defaultTopics);
+          setCustomTopics(JSON.parse(JSON.stringify(defaultTopics)));
         }
       } catch (err) {
         console.error("Failed to load topics", err);
-        setCustomTopics(defaultTopics);
+        setCustomTopics(JSON.parse(JSON.stringify(defaultTopics)));
       } finally {
         setLoading(false);
       }

@@ -16,15 +16,15 @@ export default function LessonRoadmap() {
   useEffect(() => {
     const loadTopics = async () => {
       try {
-        const saved = await localforage.getItem('custom_topics');
-        if (saved) {
-          setCustomTopics(saved as any[]);
+        const saved = await localforage.getItem('custom_topics') as any[];
+        if (saved && saved.length > 0) {
+          setCustomTopics(saved);
         } else {
-          setCustomTopics(defaultTopics);
+          setCustomTopics(JSON.parse(JSON.stringify(defaultTopics)));
         }
       } catch (err) {
         console.error("Failed to load topics", err);
-        setCustomTopics(defaultTopics);
+        setCustomTopics(JSON.parse(JSON.stringify(defaultTopics)));
       } finally {
         setLoading(false);
       }
