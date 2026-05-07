@@ -21,6 +21,62 @@ export interface LessonResponse {
   subtopics: SubtopicResponse[];
 }
 
+export async function generateCartoonAvatar(
+  base64Image: string,
+  apiKey?: string
+): Promise<string> {
+  let envKey = "";
+  if (typeof process !== "undefined" && process.env) {
+    envKey = process.env.GEMINI_API_KEY || "";
+  } else if (typeof import.meta !== "undefined" && (import.meta as any).env) {
+    envKey = (import.meta as any).env.VITE_GEMINI_API_KEY || "";
+  }
+  const finalApiKey = apiKey || envKey || localStorage.getItem('gemini_api_key') || "";
+  
+  if (!finalApiKey) {
+    throw new Error("Gemini API key is required. Please set it in Settings.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: finalApiKey });
+
+  const mimeTypeMatch = base64Image.match(/^data:(image\/\w+);base64,/);
+  const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+  const data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              data: data,
+              mimeType: mimeType,
+            },
+          },
+          {
+            text: 'Turn this portrait image into a fun, colorful, flat vector illustration cartoon avatar. Highly stylized, clean lines, solid colors.',
+          },
+        ],
+      },
+      config: {
+         // Some models might not support advanced configs, so we keep it simple
+      }
+    });
+
+    for (const part of (response as any).candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+      }
+    }
+
+    throw new Error("No image was returned by the AI.");
+  } catch (error) {
+    console.error("Cartoon generation failed:", error);
+    throw new Error("AI Cartoon generation failed. Check API limits or try again.");
+  }
+}
+
 /**
  * Common AI call function with retry logic
  */

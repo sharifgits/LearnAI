@@ -9,8 +9,10 @@ import Learn from './components/Learn';
 import AiCreator from './components/AiCreator';
 import VoiceChat from './components/VoiceChat';
 import Settings from './components/Settings';
+import ProfilePictureDialog from './components/ProfilePictureDialog';
 import * as LucideIcons from 'lucide-react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Camera } from 'lucide-react';
+import localforage from 'localforage';
 
 function getIcon(name: string, size: number = 24) {
   const Icon = (LucideIcons as any)[name.charAt(0).toUpperCase() + name.slice(1).replace(/-([a-z])/g, g => g[1].toUpperCase())];
@@ -20,7 +22,9 @@ function getIcon(name: string, size: number = 24) {
 export default function App() {
   const [activeTab, setActiveTab] = useState('creator');
   const [extractedText, setExtractedText] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [profilePic, setProfilePic] = useState<string | null>(null);
   
   useEffect(() => {
     // Initialize history
@@ -36,6 +40,22 @@ export default function App() {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const pic = await localforage.getItem<string>('profile_picture');
+        if (pic) {
+          setProfilePic(pic);
+        }
+      } catch (err) {
+        console.error("Failed to load profile picture", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
   }, []);
 
   const changeTab = (tab: string) => {
@@ -84,6 +104,31 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-h-0 h-full overflow-hidden relative">
+        {/* Top Navigation Bar */}
+        <header className="shrink-0 border-b border-slate-900 bg-slate-950 flex items-center justify-between p-4 z-10 shadow-sm shadow-slate-900/20">
+          {/* Mobile Logo */}
+          <div className="flex items-center gap-3 md:hidden">
+            <div className="bg-indigo-500 w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold">G</div>
+            <h1 className="text-lg font-bold tracking-tight text-white">GrammarAi</h1>
+          </div>
+          
+          {/* Spacer for desktop */}
+          <div className="hidden md:block"></div>
+
+          {/* Right side - Profile Image */}
+          <div className="flex items-center gap-3">
+             <div 
+               onClick={() => setShowProfileDialog(true)}
+               className="relative w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-700 hover:border-indigo-500 overflow-hidden cursor-pointer transition-all duration-200 group"
+             >
+               <img src={profilePic || "https://api.dicebear.com/7.x/avataaars/svg?seed=GrammarAi_User&backgroundColor=4f46e5"} alt="Profile" className="w-full h-full object-cover" />
+               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                 <Camera size={16} className="text-white" />
+               </div>
+             </div>
+          </div>
+        </header>
+
         {/* Content */}
         <div className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
           {activeTab === 'learn' && <Learn />}
@@ -102,6 +147,12 @@ export default function App() {
         <NavItemMobile active={activeTab === 'voice'} onClick={() => changeTab('voice')} icon="mic" label="Voice Interaction" />
         <NavItemMobile active={activeTab === 'settings'} onClick={() => changeTab('settings')} icon="settings" label="Settings" />
       </nav>
+
+      <ProfilePictureDialog 
+        isOpen={showProfileDialog}
+        onClose={() => setShowProfileDialog(false)}
+        onSave={(data) => setProfilePic(data)}
+      />
     </div>
   );
 }

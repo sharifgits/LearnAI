@@ -2,7 +2,8 @@
   "name": "Remix: GramrAI",
   "description": "An AI-powered English grammar and vocabulary learning application.",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "camera"
   ],
   "majorCapabilities": []
 }
