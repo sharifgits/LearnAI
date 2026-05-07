@@ -67,6 +67,10 @@ Text: ${userText}`;
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       
+      recognitionRef.current.onstart = () => {
+        setIsRecording(true);
+      };
+
       recognitionRef.current.onresult = (event: any) => {
         let finalTrans = '';
         let interimTrans = '';
@@ -156,28 +160,34 @@ Text: ${userText}`;
       setTranslationResult('');
       if (recognitionRef.current) {
         try {
-          // Explicitly ask for microphone permissions first to trigger the browser prompt
-          // which helps when webkitSpeechRecognition fails to trigger it in some contexts.
-          navigator.mediaDevices.getUserMedia({ audio: true }).then(() => {
-             try {
-                recognitionRef.current.lang = activeTab === 'translation' ? sourceLang : 'en-US';
-                recognitionRef.current.start();
-                setIsRecording(true);
-             } catch (e: any) {
-                console.warn("Speech recognition failed to start", e);
-                if (e.name !== 'InvalidStateError') {
-                   alert("Failed to start recording. Error: " + (e.message || 'Unknown'));
-                } else {
-                   setIsRecording(true);
-                }
-             }
-          }).catch((err) => {
-             console.error("Mic permission error", err);
-             alert("Microphone permission was denied. Please allow microphone access. If you are in a preview, please open the app in a new tab.");
-          });
+          // Request mic explicitly. This prompts the user if they haven't granted it.
+          // In an iframe, this might not show a prompt and might hang or reject.
           
+          // Use a timeout race to prevent hanging forever
+          const stream = await Promise.race([
+            navigator.mediaDevices.getUserMedia({ audio: true }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for microphone permission.")), 3000))
+          ]) as MediaStream;
+          
+          // Once granted, we can let speech recognition take over.
+          // In some browsers holding the stream blocks SpeechRecognition, so we stop it.
+          stream.getTracks().forEach(track => track.stop());
+          
+          recognitionRef.current.lang = activeTab === 'translation' ? sourceLang : 'en-US';
+          recognitionRef.current.start();
+          // setIsRecording(true) will be called inside recognition.onstart event
         } catch (e: any) {
-          console.error("General error requesting mic", e);
+          console.warn("Speech recognition failed to start", e);
+          setIsRecording(false);
+          
+          // Determine if it was a permission error
+          if (e.name === 'NotAllowedError' || e.message?.toLowerCase().includes('permission')) {
+             alert("Microphone permission denied. \nIf you are using the app inside the AI Studio preview, please open the app in a FULL NEW TAB using the top right button, then try again.");
+          } else if (e.name !== 'InvalidStateError') {
+             alert("Failed to start recording! \nTip: Please open this app in a full new tab. Error: " + (e.message || e.name || 'Unknown'));
+          } else {
+             setIsRecording(true); // It was already running
+          }
         }
       } else {
         alert("Voice features aren't fully supported in your browser. Please try Chrome/Edge or open in a new tab.");
