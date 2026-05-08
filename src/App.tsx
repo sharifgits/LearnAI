@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 import Vocabulary from './components/Vocabulary';
 import Learn from './components/Learn';
 import AiCreator from './components/AiCreator';
-import VoiceChat from './components/VoiceChat';
 import Settings from './components/Settings';
 import ProfilePictureDialog from './components/ProfilePictureDialog';
 import * as LucideIcons from 'lucide-react';
@@ -88,7 +87,6 @@ export default function App() {
           <NavItem active={activeTab === 'learn'} onClick={() => changeTab('learn')} icon="book" label="Learn" />
           <NavItem active={activeTab === 'vocab'} onClick={() => changeTab('vocab')} icon="book-open" label="Vocabulary" />
           <NavItem active={activeTab === 'creator'} onClick={() => changeTab('creator')} icon="cpu" label="AI Creator" />
-          <NavItem active={activeTab === 'voice'} onClick={() => changeTab('voice')} icon="mic" label="Voice Interaction" />
           <NavItem active={activeTab === 'settings'} onClick={() => changeTab('settings')} icon="settings" label="Settings" />
         </nav>
         <div className="p-4 border-t border-slate-900 space-y-4">
@@ -134,7 +132,6 @@ export default function App() {
           {activeTab === 'learn' && <Learn />}
           {activeTab === 'vocab' && <Vocabulary />}
           {activeTab === 'creator' && <AiCreator initialText={extractedText} />}
-          {activeTab === 'voice' && <VoiceChat />}
           {activeTab === 'settings' && <Settings />}
         </div>
       </main>
@@ -144,7 +141,6 @@ export default function App() {
         <NavItemMobile active={activeTab === 'learn'} onClick={() => changeTab('learn')} icon="book" label="Learn" />
         <NavItemMobile active={activeTab === 'vocab'} onClick={() => changeTab('vocab')} icon="book-open" label="Vocabulary" />
         <NavItemMobile active={activeTab === 'creator'} onClick={() => changeTab('creator')} icon="cpu" label="AI Creator" />
-        <NavItemMobile active={activeTab === 'voice'} onClick={() => changeTab('voice')} icon="mic" label="Voice Interaction" />
         <NavItemMobile active={activeTab === 'settings'} onClick={() => changeTab('settings')} icon="settings" label="Settings" />
       </nav>
 

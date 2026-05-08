@@ -1,8 +1,6 @@
 import { useState, useRef, ChangeEvent } from 'react';
-import { Key, Save, Download, Upload, CheckCircle, AlertTriangle, Loader2, Database, RefreshCw, Smartphone } from 'lucide-react';
+import { Key, Save, Download, Upload, CheckCircle, AlertTriangle, Loader2, Database, RefreshCw } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
-
-import { PWAInstall } from './PWAInstall';
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
@@ -176,23 +174,6 @@ export default function Settings() {
                         <p className="font-medium text-sm">{testResult.message}</p>
                     </div>
                 )}
-            </div>
-        </section>
-
-        {/* PWA Installation */}
-        <section className="bg-[#131b2c] border border-slate-800 rounded-3xl p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-indigo-500/10 rounded-xl">
-                    <Smartphone className="text-indigo-500" size={24} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">App Installation</h2>
-                  <p className="text-sm text-slate-400">Install this web app on your device for a native-like experience.</p>
-                </div>
-            </div>
-
-            <div className="max-w-2xl">
-                <PWAInstall />
             </div>
         </section>
 
