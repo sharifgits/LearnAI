@@ -60,7 +60,7 @@ export async function generateCartoonAvatar(
         ],
       },
       config: {
-         // Some models might not support advanced configs, so we keep it simple
+         // Reverted
       }
     });
 
@@ -71,9 +71,9 @@ export async function generateCartoonAvatar(
     }
 
     throw new Error("No image was returned by the AI.");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Cartoon generation failed:", error);
-    throw new Error("AI Cartoon generation failed. Check API limits or try again.");
+    throw new Error(error.message || "AI Cartoon generation failed. Check API limits or try again.");
   }
 }
 
@@ -106,7 +106,7 @@ export async function callGemini(
     try {
       // Using the models.generateContent syntax which is confirmed working in this environment
       const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
             systemInstruction: systemInstruction,
@@ -206,6 +206,12 @@ export async function generateGrammarLesson(
   const fullPrompt = `### TEXT TO ANALYZE ###\n${inputText}\n#######################\n\n### USER INSTRUCTIONS ###\n${customInstruction}\n#######################\n\nOnly create a lesson based on the content in the "TEXT TO ANALYZE" section. Do not generate a lesson about the examples provided in the User Instructions unless they are also in the Text To Analyze.\n\nOutput JSON schema: ${JSON.stringify(expectedSchema)}`;
 
   const responseText = await callGemini(fullPrompt, systemPrompt, apiKey || undefined);
-  const cleanedText = (responseText || "{}").replace(/```json/gi, '').replace(/```/g, '').trim();
-  return JSON.parse(cleanedText) as LessonResponse;
+  let cleanedText = (responseText || "{}").replace(/```json/gi, '').replace(/```/g, '').trim();
+  
+  try {
+    return JSON.parse(cleanedText) as LessonResponse;
+  } catch (parseError) {
+    console.error("Failed to parse JSON. Raw response from AI:", responseText);
+    throw new Error("AI returned data in an invalid format. Please try again.");
+  }
 }
