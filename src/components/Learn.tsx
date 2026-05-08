@@ -75,6 +75,11 @@ export default function Learn() {
             initialPage={viewingLesson.pageIdx}
             isCustom={viewingLesson.isCustom}
             customData={viewingLesson.customData}
+            completedPages={(() => {
+              const topic = customTopics.find(t => t.id === viewingLesson.topicId || t.steps?.some((s: any) => s.topicId === viewingLesson.topicId));
+              if (!topic || !topic.steps) return [];
+              return topic.steps.filter((s: any) => s.status === 'completed' && s.topicId === viewingLesson.topicId).map((s: any) => s.pageIdx);
+            })()}
             onClose={() => setViewingLesson(null)}
             onStartPractice={(id) => {
               setViewingLesson(null);

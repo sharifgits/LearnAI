@@ -106,7 +106,7 @@ export async function callGemini(
     try {
       // Using the models.generateContent syntax which is confirmed working in this environment
       const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
             systemInstruction: systemInstruction,
@@ -142,7 +142,8 @@ export async function generateGrammarLesson(
   customInstruction: string = ""
 ): Promise<LessonResponse> {
   const systemPrompt = `You are an expert English Grammar teacher for Bengali students. 
-  Create a detailed, structured lesson based on the input text. 
+  Create a detailed, structured lesson based EXCLUSIVELY on the provided "TEXT TO ANALYZE".
+  Do NOT repeat the same lessons you've generated before. The title and subtopics MUST directly reflect the new text.
   
   CRITICAL FORMATTING RULES:
   1. STRICTLY FORBIDDEN: Do NOT include "English Grammar Lesson:" or "Grammar Lesson:" or any similar redundant prefix in titles.
@@ -151,7 +152,7 @@ export async function generateGrammarLesson(
   4. EXAMPLES MUST BE PLACED IN THE \`examples\` JSON ARRAY. Do NOT put examples inside the \`content\` string. Each example in the array should be an object with \`en\` (the English sentence) and \`bn\` (the Bengali analysis in parentheses).
   5. Format the \`bn\` analysis exactly like this: (এখানে noun "tail" verb "chased"-এর action receive করছে).
   6. Ensure a mix of theory and examples.
-  7. Generate a MINIMUM of 10 practice questions for each subtopic to ensure thorough testing.
+  7. Generate 3 to 5 practice questions for each subtopic to ensure thorough testing.
   8. Output must be a valid JSON matching the schema.`;
   
   const expectedSchema = {
@@ -182,8 +183,8 @@ export async function generateGrammarLesson(
             sourcePage: { type: "string" },
             practice: {
               type: "array",
-              minItems: 10,
-              description: "Array of exactly 10 or more practice questions",
+              minItems: 3,
+              description: "Array of 3 to 5 practice questions",
               items: {
                 type: "object",
                 properties: {
@@ -202,8 +203,9 @@ export async function generateGrammarLesson(
     required: ["title", "subtopics"]
   };
 
-  const fullPrompt = `Input text to convert into a lesson: ${inputText}\n\nAdditional Instructions: ${customInstruction}\n\nOutput JSON schema: ${JSON.stringify(expectedSchema)}`;
+  const fullPrompt = `### TEXT TO ANALYZE ###\n${inputText}\n#######################\n\n### USER INSTRUCTIONS ###\n${customInstruction}\n#######################\n\nOnly create a lesson based on the content in the "TEXT TO ANALYZE" section. Do not generate a lesson about the examples provided in the User Instructions unless they are also in the Text To Analyze.\n\nOutput JSON schema: ${JSON.stringify(expectedSchema)}`;
 
   const responseText = await callGemini(fullPrompt, systemPrompt, apiKey || undefined);
-  return JSON.parse(responseText || "{}") as LessonResponse;
+  const cleanedText = (responseText || "{}").replace(/```json/gi, '').replace(/```/g, '').trim();
+  return JSON.parse(cleanedText) as LessonResponse;
 }

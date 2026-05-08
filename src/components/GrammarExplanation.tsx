@@ -11,13 +11,14 @@ interface GrammarExplanationProps {
   initialPage?: number;
   isCustom?: boolean;
   customData?: any;
+  completedPages?: number[];
   onClose: () => void;
   onStartPractice: (topicId: number) => void;
   onUpdateContent?: (updatedData: any) => void;
   onComplete?: (pageIdx: number) => void;
 }
 
-export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customData, onClose, onStartPractice, onUpdateContent, onComplete }: GrammarExplanationProps) {
+export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customData, completedPages = [], onClose, onStartPractice, onUpdateContent, onComplete }: GrammarExplanationProps) {
   const [data, setData] = useState<any>(isCustom && customData ? customData : (GRAMMAR_DATA[topicId] || {
     title: "Coming Soon",
     subtitle: "We are currently writing this lesson.",
@@ -146,6 +147,9 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
       setShowExplanation(false);
     } else {
       setIsFinished(true);
+      if (onComplete) {
+        onComplete(currentPage);
+      }
     }
   };
 
@@ -468,17 +472,30 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                       )}
                     </div>
 
-                    {(!currentContent.practice || currentContent.practice.length === 0) && onComplete && (
+                    {onComplete && (
                       <div className="mt-4">
                         <button 
                           onClick={() => {
-                            onComplete(currentPage);
-                            onClose();
+                            if (isFinished || completedPages.includes(currentPage)) return;
+                            if (currentContent.practice && currentContent.practice.length > 0) {
+                              startPracticeView();
+                            } else {
+                              onComplete(currentPage);
+                            }
                           }}
-                          className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex justify-center items-center gap-2"
+                          className={`w-full py-3 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2 ${
+                            (isFinished || completedPages.includes(currentPage)) 
+                              ? 'bg-purple-500 hover:bg-purple-600 shadow-purple-500/20 cursor-default active:scale-100' 
+                              : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                          }`}
                         >
                           <Check size={16} strokeWidth={3} />
-                          Mark Lesson Complete
+                          { (isFinished || completedPages.includes(currentPage)) 
+                              ? 'Lesson Completed' 
+                              : (currentContent.practice && currentContent.practice.length > 0)
+                                ? 'Practice to Complete'
+                                : 'Mark Lesson Complete'
+                          }
                         </button>
                       </div>
                     )}
@@ -580,17 +597,15 @@ export function GrammarExplanation({ topicId, initialPage = 0, isCustom, customD
                             onClick={resetPractice}
                             className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black rounded-xl text-[10px] uppercase tracking-widest shadow-sm"
                            >
-                             Reset
+                             Redo Practice
                            </button>
                            <button 
                             onClick={() => {
-                              if (onComplete) onComplete(currentPage);
                               setViewMode('lesson');
-                              onClose();
                             }}
-                            className="flex-1 py-3 bg-emerald-500 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                            className="flex-1 py-3 bg-purple-500 hover:bg-purple-600 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-purple-500/20 transition-colors"
                            >
-                             Continue
+                             Back to Lesson
                            </button>
                         </div>
                       </div>

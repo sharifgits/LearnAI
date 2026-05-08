@@ -1,6 +1,8 @@
 import { useState, useRef, ChangeEvent } from 'react';
-import { Key, Save, Download, Upload, CheckCircle, AlertTriangle, Loader2, Database, RefreshCw } from 'lucide-react';
+import { Key, Save, Download, Upload, CheckCircle, AlertTriangle, Loader2, Database, RefreshCw, RotateCcw } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
+import localforage from 'localforage';
+import { defaultTopics } from '../data/defaultTopics';
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
@@ -99,6 +101,29 @@ export default function Settings() {
     
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
+    }
+  };
+
+  const handleResetProgress = async () => {
+    try {
+      let savedTopics: any = await localforage.getItem('custom_topics');
+      if (!savedTopics || savedTopics.length === 0) {
+          savedTopics = JSON.parse(JSON.stringify(defaultTopics));
+      }
+      const resetTopics = savedTopics.map((topic: any) => {
+        if (topic.steps) {
+           topic.steps = topic.steps.map((step: any, index: number) => ({
+             ...step,
+             status: index === 0 ? 'active' : 'locked' // Assuming first step is active
+           }));
+        }
+        return topic;
+      });
+      await localforage.setItem('custom_topics', resetTopics);
+      setDataResult({ status: 'success', message: 'Lesson progress reset successfully!' });
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err: any) {
+      setDataResult({ status: 'error', message: err.message || 'Failed to reset progress' });
     }
   };
 
@@ -233,6 +258,29 @@ export default function Settings() {
                     <p className="font-medium text-sm">{dataResult.message}</p>
                 </div>
             )}
+        </section>
+
+        {/* Start New Session */}
+        <section className="bg-[#131b2c] border border-emerald-900/50 rounded-3xl p-6 md:p-8">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-emerald-500/10 rounded-xl">
+                    <RefreshCw className="text-emerald-500" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Start New Session</h2>
+                  <p className="text-sm text-slate-400">Reset your practice progress to practice again.</p>
+                </div>
+            </div>
+
+            <div className="max-w-2xl">
+                <button 
+                    onClick={handleResetProgress}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/50 font-bold py-3 px-6 rounded-xl transition-all shadow-sm"
+                >
+                    <RefreshCw size={18} strokeWidth={2.5} />
+                    New (Reset Progress)
+                </button>
+            </div>
         </section>
 
       </div>
