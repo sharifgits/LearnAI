@@ -275,14 +275,18 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
     if (!inputText.trim()) return;
     setIsGenerating(true);
     setError(null);
+    setPreview(null);
     try {
-      const customKey = localStorage.getItem('GEMINI_API_KEY');
+      const customKey = localStorage.getItem('gemini_api_key');
       const result = await generateGrammarLesson(inputText, customKey, customInstruction);
-      if (result && result.subtopics && result.subtopics.length > 0) {
-        // Merge all generated subtopics into one unified block for easier editing
-        let allPractice: any[] = [];
-        let allExamples: any[] = [];
-        const mergedContent = result.subtopics.map((s: any, i: number) => {
+      if (!result || !result.subtopics || result.subtopics.length === 0) {
+        throw new Error("AI could not extract any grammar lessons from this content. Please try providing more text or checking your instructions.");
+      }
+      
+      // Merge all generated subtopics into one unified block for easier editing
+      let allPractice: any[] = [];
+      let allExamples: any[] = [];
+      const mergedContent = result.subtopics.map((s: any, i: number) => {
           // Collect practice
           if (s.practice) allPractice = [...allPractice, ...s.practice];
           if (s.examples) allExamples = [...allExamples, ...s.examples];
@@ -301,7 +305,6 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
           practice: allPractice
         }];
         result.title = (result.title || "Comprehensive Lesson").replace(/^(English\s+)?Grammar\s+Lesson:\s*/i, '');
-      }
       setPreview(result);
     } catch (err: any) {
       console.error(err);
@@ -329,7 +332,7 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
         savedTopics = JSON.parse(JSON.stringify(defaultTopics));
       }
       const baseTopicId = 1000 + savedTopics.length; 
-      const customKey = localStorage.getItem('GEMINI_API_KEY');
+      const customKey = localStorage.getItem('gemini_api_key');
       
       for (let idx = 0; idx < chunks.length; idx++) {
         setCurrentChunk(idx + 1);
@@ -942,10 +945,10 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
                            {(preview.subtopics || []).map((sub: any, idx: number) => (
                              <div key={`sub-${idx}`} className="space-y-4">
                                <textarea 
-                                 value={sub.content}
+                                 value={sub.content || ""}
                                  onChange={(e) => handleSubTopicEdit(idx, 'content', e.target.value)}
-                                 className="w-full min-h-[450px] text-[12px] font-medium text-[#7a86a1] bg-slate-50/10 dark:bg-slate-800/10 p-6 rounded-[2rem] focus:outline-none border-2 border-transparent focus:border-emerald-500 transition-all leading-loose shadow-inner [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                                 placeholder="Combined Lesson Content..."
+                                 className="w-full min-h-[450px] text-[13px] font-medium text-slate-700 dark:text-slate-200 bg-white/50 dark:bg-slate-800/50 p-6 rounded-[2rem] focus:outline-none border-2 border-transparent focus:border-emerald-500 transition-all leading-relaxed shadow-inner [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                                 placeholder="Lesson Content..."
                                />
                                {sub.examples && sub.examples.length > 0 && (
                                  <div className="bg-[#131b2c] p-4 rounded-xl border border-emerald-500/20">
