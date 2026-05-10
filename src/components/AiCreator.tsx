@@ -286,10 +286,13 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
       // Merge all generated subtopics into one unified block for easier editing
       let allPractice: any[] = [];
       let allExamples: any[] = [];
+      const sourcePages = new Set<string>();
+      
       const mergedContent = result.subtopics.map((s: any, i: number) => {
           // Collect practice
           if (s.practice) allPractice = [...allPractice, ...s.practice];
           if (s.examples) allExamples = [...allExamples, ...s.examples];
+          if (s.sourcePage) sourcePages.add(s.sourcePage);
           
           // Clean title and check if it already starts with a number
           const cleanedTitle = s.title?.replace(/^(English\s+)?Grammar\s+Lesson:\s*/i, '');
@@ -302,7 +305,8 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
           title: (result.title || "Comprehensive Lesson").replace(/^(English\s+)?Grammar\s+Lesson:\s*/i, ''),
           content: mergedContent,
           examples: allExamples,
-          practice: allPractice
+          practice: allPractice,
+          sourcePage: Array.from(sourcePages).join(', ')
         }];
         result.title = (result.title || "Comprehensive Lesson").replace(/^(English\s+)?Grammar\s+Lesson:\s*/i, '');
       setPreview(result);
@@ -950,6 +954,28 @@ Bengali analysis: (এখানে noun "book" verb "reads"-এর action receiv
                                  className="w-full min-h-[450px] text-[13px] font-medium text-slate-700 dark:text-slate-200 bg-white/50 dark:bg-slate-800/50 p-6 rounded-[2rem] focus:outline-none border-2 border-transparent focus:border-emerald-500 transition-all leading-relaxed shadow-inner [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                                  placeholder="Lesson Content..."
                                />
+                               
+                               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 pt-2 border-t border-slate-100/10 mt-6">
+                                 <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <span className="text-[10px] font-black text-[#7a86a1] uppercase tracking-widest whitespace-nowrap">Source Page:</span>
+                                    <input 
+                                      type="text"
+                                      value={sub.sourcePage || ""}
+                                      onChange={(e) => handleSubTopicEdit(idx, 'sourcePage', e.target.value)}
+                                      placeholder="e.g. 24"
+                                      className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 rounded-lg px-3 py-1.5 text-[10px] font-black focus:outline-none focus:border-indigo-500 transition-all w-24"
+                                    />
+                                 </div>
+                                 
+                                 {sub.sourcePage && (
+                                   <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                                     <BookOpen size={10} className="text-indigo-400" />
+                                     <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.1em]">
+                                       Lesson End Page: {sub.sourcePage}
+                                     </span>
+                                   </div>
+                                 )}
+                               </div>
                                {sub.examples && sub.examples.length > 0 && (
                                  <div className="bg-[#131b2c] p-4 rounded-xl border border-emerald-500/20">
                                    <h4 className="text-[10px] font-black tracking-widest text-[#7a86a1] uppercase mb-3">Auto-Generated Examples</h4>

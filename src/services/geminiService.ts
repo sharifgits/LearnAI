@@ -153,7 +153,8 @@ export async function generateGrammarLesson(
   5. Format the \`bn\` analysis exactly like this: (এখানে noun "tail" verb "chased"-এর action receive করছে).
   6. Ensure a mix of theory and examples.
   7. Generate 3 to 5 practice questions for each subtopic to ensure thorough testing.
-  8. Output must be a valid JSON matching the schema.`;
+  8. CRITICAL: The input text contains "[Page X]" markers (e.g., "[Page 1]", "[Page 2]"). You MUST extract the page number (only the number, e.g., "1") from these markers. Map this number to the "sourcePage" field for every subtopic generated from that specific section of text.
+  9. Output must be a valid JSON matching the schema.`;
   
   const expectedSchema = {
     type: "object",
