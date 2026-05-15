@@ -11,6 +11,8 @@ export default function Settings() {
   const [dataResult, setDataResult] = useState<{status: 'success' | 'error' | null, message: string}>({status: null, message: ''});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isDataOperation, setIsDataOperation] = useState(false);
+
   const handleSave = async () => {
     localStorage.setItem('gemini_api_key', apiKey);
     setTestResult({ status: 'success', message: 'API Key saved locally successfully!' });
@@ -47,30 +49,76 @@ export default function Settings() {
     }
   };
 
-  const handleBackup = () => {
+  const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  };
+
+  const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  };
+
+  const handleBackup = async () => {
+    setIsDataOperation(true);
+    setDataResult({ status: null, message: '' });
     try {
-        const data: Record<string, string> = {};
+        const localStorageData: Record<string, string> = {};
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key) {
-                data[key] = localStorage.getItem(key) || '';
+                localStorageData[key] = localStorage.getItem(key) || '';
             }
         }
+
+        const localForageData: Record<string, any> = {};
+        await localforage.iterate((value, key) => {
+            if (value instanceof ArrayBuffer) {
+                localForageData[key] = {
+                  _isBinary: true,
+                  _type: 'ArrayBuffer',
+                  _data: arrayBufferToBase64(value)
+                };
+            } else {
+                localForageData[key] = value;
+            }
+        });
         
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const backupData = {
+          app: 'GrammarBD',
+          version: '2.0',
+          timestamp: new Date().toISOString(),
+          localStorage: localStorageData,
+          localForage: localForageData
+        };
+
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `grammarbd-backup-${new Date().toISOString().split('T')[0]}.json`;
+        const date = new Date().toISOString().split('T')[0];
+        a.download = `grammarbd-full-backup-${date}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        setDataResult({ status: 'success', message: 'Data backup generated successfully!' });
+        setDataResult({ status: 'success', message: 'Comprehensive backup generated successfully!' });
         setTimeout(() => setDataResult({ status: null, message: '' }), 4000);
     } catch(err: any) {
         setDataResult({ status: 'error', message: err.message || 'Failed to generate backup' });
+    } finally {
+      setIsDataOperation(false);
     }
   };
 
@@ -78,23 +126,55 @@ export default function Settings() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setIsDataOperation(true);
+    setDataResult({ status: null, message: '' });
+
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         try {
             const content = e.target?.result as string;
             const data = JSON.parse(content);
             
-            localStorage.clear();
-            for (const key in data) {
-                localStorage.setItem(key, data[key]);
+            // Handle legacy backups (only localStorage)
+            if (!data.app || (!data.localStorage && !data.localForage)) {
+               localStorage.clear();
+               for (const key in data) {
+                   localStorage.setItem(key, data[key]);
+               }
+               setDataResult({ status: 'success', message: 'Legacy backup restored. Please refresh.' });
+               return;
+            }
+
+            // Handle full backups
+            if (data.localStorage) {
+              localStorage.clear();
+              for (const key in data.localStorage) {
+                  localStorage.setItem(key, data.localStorage[key]);
+              }
+            }
+
+            if (data.localForage) {
+              await localforage.clear();
+              for (const key in data.localForage) {
+                  let value = data.localForage[key];
+                  if (value && typeof value === 'object' && value._isBinary) {
+                      if (value._type === 'ArrayBuffer') {
+                          value = base64ToArrayBuffer(value._data);
+                      }
+                  }
+                  await localforage.setItem(key, value);
+              }
             }
             
             const savedKey = localStorage.getItem('gemini_api_key');
             if (savedKey) setApiKey(savedKey);
             
-            setDataResult({ status: 'success', message: 'Data restored successfully! Please refresh or restart to apply.' });
-        } catch (error) {
-            setDataResult({ status: 'error', message: 'Failed to parse backup file. Please ensure it is a valid JSON.' });
+            setDataResult({ status: 'success', message: 'All data restored successfully! Please refresh or restart to apply.' });
+            setTimeout(() => window.location.reload(), 2000);
+        } catch (error: any) {
+            setDataResult({ status: 'error', message: 'Failed to parse backup file: ' + error.message });
+        } finally {
+          setIsDataOperation(false);
         }
     };
     reader.readAsText(file);
@@ -220,9 +300,10 @@ export default function Settings() {
                     <p className="text-sm text-slate-400 mb-6 min-h-[40px]">Export all your local data to a JSON file for safekeeping.</p>
                     <button 
                         onClick={handleBackup}
-                        className="w-full justify-center flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-3 px-6 rounded-xl transition-colors"
+                        disabled={isDataOperation}
+                        className="w-full justify-center flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-3 px-6 rounded-xl transition-colors disabled:opacity-50"
                     >
-                        <Download size={18} />
+                        {isDataOperation ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                         Download Backup
                     </button>
                 </div>
@@ -240,9 +321,10 @@ export default function Settings() {
                     />
                     <button 
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full justify-center flex items-center gap-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-500 border border-emerald-900/50 font-semibold py-3 px-6 rounded-xl transition-colors"
+                        disabled={isDataOperation}
+                        className="w-full justify-center flex items-center gap-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-500 border border-emerald-900/50 font-semibold py-3 px-6 rounded-xl transition-colors disabled:opacity-50"
                     >
-                        <Upload size={18} />
+                        {isDataOperation ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
                         Upload Backup
                     </button>
                 </div>
